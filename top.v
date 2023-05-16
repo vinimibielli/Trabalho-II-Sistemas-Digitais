@@ -17,7 +17,7 @@ wire [15:0] f_out, t_out;
 wire data_1_en, buffer_empty, buffer_full, data_2_valid;
 wire [15:0] data_1, data_2;
 //DADOS DO DM
-wire [1:0] module_wire;
+reg [1:0] modulereg;
 
 edge_detector start_f_detector (.clock(clock), .reset(reset), .din(start_f), .rising(start_f_ed));
 edge_detector start_t_detector (.clock(clock), .reset(reset), .din(start_t), .rising(start_t_ed));
@@ -48,6 +48,7 @@ begin
     begin
     case (EA)
        6'd0 : begin
+        modulereg <= 2'd0;
         if(start_f_ed == 1'b1)
         begin
             EA <= 6'd1;
@@ -58,6 +59,7 @@ begin
         end
        end
        6'd1 : begin
+        modulereg <= 6'd1;
         if(stop_f_t_ed == 1'b1)
         begin
             EA <= 6'd5;
@@ -78,6 +80,7 @@ begin
         end
        end
        6'd3 : begin
+        modulereg <= 2'd2;
         if(stop_f_t_ed == 1'b1)
         begin
             EA <= 6'd5;
@@ -120,14 +123,12 @@ assign t_en = (EA == 6'd3 && buffer_full != 1'b1) ? 1'b1 : 1'b0;
 //ASSIGN DO WRAPPER
 assign data_1 = (EA == 6'd1) ? f_out : (EA == 6'd3) ? t_out : 16'd0;
 assign data_1_en = f_en || t_en;
-//ASSIGN DO DM
-assign module_wire = (EA == 6'd1 || EA == 6'd2) ? 2'd1 : (EA == 6'd3 || EA == 6'd4) ? 2'd2 : 2'd0;
 
 //INSTANCIA??O DOS M?DULOS
 fibonacci FIB_inst(.reset(reset), .clock(clk_1), .f_en(f_en), .f_valid(f_valid), .f_out(f_out));
 timer TIM_inst(.reset(reset), .clock(clk_1), .t_en(t_en), .t_valid(t_valid), .t_out(t_out));
 wrapper WRP_inst(.reset(reset), .clk_1(clk_1), .clk_2(clk_2), .data_1_en(data_1_en), .data_1(data_1), .buffer_empty(buffer_empty), .buffer_full(buffer_full), .data_2_valid(data_2_valid), .data_2(data_2));
 dcm DCM_inst(.reset(reset), .clock(clock), .clk_1(clk_1), .clk_2(clk_2), .update(update_ed), .prog_in(prog), .prog_out(prog_out));
-dm DM_inst(.reset(reset), .clock(clock), .prog(prog_out), .data_2(data_2), .dec_ddp(dec_ddp), .an(an), .moduledm(module_wire));
+dm DM_inst(.reset(reset), .clock(clock), .prog(prog_out), .data_2(data_2), .dec_ddp(dec_ddp), .an(an), .moduledm(modulereg));
 
 endmodule
