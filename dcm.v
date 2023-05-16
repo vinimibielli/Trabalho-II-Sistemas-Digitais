@@ -8,7 +8,7 @@ module dcm(
 reg clk01seg, clkalt;
 reg [2:0] prog;
 reg [31:0] count01, count02;
-parameter HALF_MS_COUNT = 2;
+parameter HALF_MS_COUNT = 5_000_000;
 
 
 initial begin
